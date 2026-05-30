@@ -1,0 +1,56 @@
+services:
+  # --- BASE DE DATOS ---
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=tienda
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306:3306"
+    networks:
+      - tienda_network
+
+  # --- BACKEND DESPACHOS ---
+  back-despachos:
+    image: back-despachos
+    container_name: back-despachos
+    depends_on:
+      - mysql_db
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_db:3306/tienda?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    networks:
+      - tienda_network
+
+  # --- BACKEND VENTAS ---
+  back-ventas:
+    image: back-ventas
+    container_name: back-ventas
+    depends_on:
+      - mysql_db
+    ports:
+      - "8081:8080"  # Mapeamos el puerto 8081 externo al 8080 interno
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_db:3306/tienda?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    networks:
+      - tienda_network
+
+  # --- FRONTEND ---
+  frontend:
+    image: front-tienda
+    container_name: front-tienda
+    ports:
+      - "80:80"
+    networks:
+      - tienda_network
+
+networks:
+  tienda_network:
+    driver: bridge
